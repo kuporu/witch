@@ -1,34 +1,81 @@
 package org.Archibald.medator.impl;
 
+import org.Archibald.medator.SqlContext;
 import org.Archibald.medator.SqlSession;
 
 import java.lang.reflect.Field;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.lang.reflect.Method;
+import java.sql.*;
+import java.util.*;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class DefaultSqlSession implements SqlSession {
+    private Connection connection;                                                                              // sql连接
+    private Map<String, SqlContext> statement2SqlContext;                                                       // statement转化为sql上下文
+
+    public DefaultSqlSession(Connection connection, Map<String, SqlContext> statement2SqlContext) {
+        this.connection = connection;
+        this.statement2SqlContext = statement2SqlContext;
+    }
+
     @Override
+    // 泛型的用法1：返回值的类型不需要在编译时指定，可以延迟到方法调用时才指定。
     public <T> T selectOne(String statement) {
+        SqlContext sqlContext = statement2SqlContext.get(statement);
+        String sql = sqlContext.getSql();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);                             // 预编译
+            ResultSet resultSet = preparedStatement.executeQuery();                                             // 执行查询
+            List<T> objects = resultSet2Obj(resultSet, Class.forName(sqlContext.getResultType()));              // 包装返回值
+            return objects.get(0);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
         return null;
     }
 
     @Override
     public <T> T selectOne(String statement, Object... parameter) {
+        SqlContext sqlContext = statement2SqlContext.get(statement);
+        String sql = sqlContext.getSql();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            buildParameter(preparedStatement, sqlContext.getLocationAndPlaceholderName(), parameter);           // sql预编译配置参数
+            ResultSet resultSet = preparedStatement.executeQuery();
+            List<T> objects = resultSet2Obj(resultSet, Class.forName(sqlContext.getResultType()));
+            return objects.get(0);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
         return null;
     }
 
     @Override
     public <T> List<T> selectList(String statement) {
+        SqlContext sqlContext = statement2SqlContext.get(statement);
+        String sql = sqlContext.getSql();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            return resultSet2Obj(resultSet, Class.forName(sqlContext.getResultType()));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
         return null;
     }
 
     @Override
     public <T> List<T> selectList(String statement, Object... parameter) {
+        SqlContext sqlContext = statement2SqlContext.get(statement);
+        String sql = sqlContext.getSql();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            buildParameter(preparedStatement, sqlContext.getLocationAndPlaceholderName(), parameter);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            return resultSet2Obj(resultSet, Class.forName(sqlContext.getResultType()));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
         return null;
     }
 
@@ -98,5 +145,38 @@ public class DefaultSqlSession implements SqlSession {
                 preparedStatement.setDate(i, (java.sql.Date)obj);
             }
         }
+    }
+
+    /**
+     *  将数据库查询结果 resultSet 封装为 clazz （List）对象并返回
+     * @param resultSet sql查询返回数据
+     * @param clazz 返回对象类型
+     * @param <T> **泛型，暂时不知道怎么用，用在什么地方**
+     * @return sql查询结果包装的对象
+     */
+
+    // *** ?的用法还没有搞清楚***
+    private <T> List<T> resultSet2Obj(ResultSet resultSet, Class<?> clazz) {
+        List<T> res = new LinkedList<>();
+        try {
+            ResultSetMetaData metaData = resultSet.getMetaData();               // 获取sql表中元数据（包好字段名）
+            int columnCount = metaData.getColumnCount();                        // 获取字段名长度
+            while (resultSet.next()) {                                          // 查看resultSet中的多行数据
+                T instance = (T) clazz.newInstance();                          // 构建clazz返回对象
+                for (int i = 1; i <= columnCount; i++) {                        // 遍历列名
+                    String columnName = metaData.getColumnName(i);              // 获取属性名
+                    Object columnValue = resultSet.getObject(i);                // 获取属性值
+                                                                                // 获取clazz类方法名
+                    String objectMethodName = "set" + columnName.substring(0, 1).toUpperCase() + columnName.substring(1);
+                                                                                // 获取返回对象方法名
+                    Method method = clazz.getMethod(objectMethodName, columnValue.getClass());
+                    method.invoke(instance, columnValue);                       // 执行对象set方法
+                }
+                res.add(instance);
+            }
+        } catch (Exception throwables) {
+            throwables.printStackTrace();
+        }
+        return res;
     }
 }
