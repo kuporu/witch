@@ -96,18 +96,18 @@ public class DefaultSqlSession implements SqlSession {
         boolean isSimpleObject = false;
         // 处理简单对象（***简单对象扩展设计模式目前没有实现***）
         for (int i = 1; i <= parameterMapSize; i++) {
-            if (parameter[i] instanceof Long) {
-                preparedStatement.setLong(i, Long.parseLong(parameter[i].toString()));
+            if (parameter[i - 1] instanceof Long) {
+                preparedStatement.setLong(i, Long.parseLong(parameter[i - 1].toString()));
                 isSimpleObject = true;
                 continue;
             }
-            if (parameter[i] instanceof Integer) {
-                preparedStatement.setInt(i, Integer.parseInt(parameter[i].toString()));
+            if (parameter[i - 1] instanceof Integer) {
+                preparedStatement.setInt(i, Integer.parseInt(parameter[i - 1].toString()));
                 isSimpleObject = true;
                 continue;
             }
-            if (parameter[i] instanceof String) {
-                preparedStatement.setString(i, parameter[i].toString());
+            if (parameter[i - 1] instanceof String) {
+                preparedStatement.setString(i, parameter[i - 1].toString());
                 isSimpleObject = true;
             }
         }
