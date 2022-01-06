@@ -1,5 +1,6 @@
 package org.Archibald.medator.impl;
 
+import org.Archibald.medator.Configuration;
 import org.Archibald.medator.SqlContext;
 import org.Archibald.medator.SqlSession;
 
@@ -10,12 +11,18 @@ import java.util.*;
 import java.util.Date;
 
 public class DefaultSqlSession implements SqlSession {
-    private Connection connection;                                                                              // sql连接
-    private Map<String, SqlContext> statement2SqlContext;                                                       // statement转化为sql上下文
+    private final Connection connection;                                                                              // sql连接
+    private final Map<String, SqlContext> statement2SqlContext;                                                       // statement转化为sql上下文
+    private final Configuration configuration;
 
-    public DefaultSqlSession(Connection connection, Map<String, SqlContext> statement2SqlContext) {
-        this.connection = connection;
-        this.statement2SqlContext = statement2SqlContext;
+    /**
+     * 装配 SqlSession 时 Configuration 就已经组装好了
+     * @param configuration 配置类
+     */
+    public DefaultSqlSession(Configuration configuration) {
+        this.configuration = configuration;
+        this.connection = configuration.getConnection();
+        this.statement2SqlContext = configuration.getMapperSqlContext();
     }
 
     @Override
@@ -77,6 +84,16 @@ public class DefaultSqlSession implements SqlSession {
             exception.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public <T> T getMapper(Class<T> clazz) {
+        return configuration.getMapper(clazz, this);
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        return this.configuration;
     }
 
     @Override
