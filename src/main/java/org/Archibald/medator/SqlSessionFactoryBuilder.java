@@ -7,6 +7,7 @@
 package org.Archibald.medator;
 
 import org.Archibald.binding.MapperRegistry;
+import org.Archibald.mapping.SqlCommandType;
 import org.Archibald.medator.impl.DefaultSqlSessionFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -79,7 +80,7 @@ public class SqlSessionFactoryBuilder {
                     sqlContext.setSql(sql);
                     sqlContext.setResultType(element.attributeValue("resultType"));
                     sqlContext.setLocationAndPlaceholderName(locationAndPlaceHolderName);
-                    sqlContext.setSqlCommandType(element.getName());
+                    sqlContext.setSqlCommandType(SqlCommandType.valueOf(element.getName().toUpperCase()));                  // 获取CRUD类型
 
                     map.put(key, sqlContext);
                 }
