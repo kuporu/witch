@@ -28,13 +28,8 @@ public class DefaultSqlSession implements SqlSession {
     @Override
     // 泛型的用法1：返回值的类型不需要在编译时指定，可以延迟到方法调用时才指定。
     public <T> T selectOne(String statement) {
-        SqlContext sqlContext = statement2SqlContext.get(statement);
-        String sql = sqlContext.getSql();
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);                             // 预编译
-            ResultSet resultSet = preparedStatement.executeQuery();                                             // 执行查询
-            List<T> objects = resultSet2Obj(resultSet, Class.forName(sqlContext.getResultType()));              // 包装返回值
-            return objects.get(0);
+            return (T) selectList(statement).get(0);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -43,6 +38,8 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> T selectOne(String statement, Object... parameter) {
+        if (parameter == null)                                                                                  // 没有携带参数的调用无参方法
+            return selectOne(statement);
         SqlContext sqlContext = statement2SqlContext.get(statement);
         String sql = sqlContext.getSql();
         try {
