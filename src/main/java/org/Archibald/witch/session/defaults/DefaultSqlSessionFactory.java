@@ -1,8 +1,8 @@
-package org.Archibald.medator.impl;
+package org.Archibald.witch.session.defaults;
 
-import org.Archibald.medator.Configuration;
-import org.Archibald.medator.SqlSession;
-import org.Archibald.medator.SqlSessionFactory;
+import org.Archibald.witch.session.Configuration;
+import org.Archibald.witch.session.SqlSession;
+import org.Archibald.witch.session.SqlSessionFactory;
 
 public class DefaultSqlSessionFactory implements SqlSessionFactory {
     private Configuration configuration;

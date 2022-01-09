@@ -2,10 +2,10 @@
 *   用于存储 Class 和 MapperProxyFactory 的对应关系 (map)
  */
 
-package org.Archibald.binding;
+package org.Archibald.witch.binding;
 
 
-import org.Archibald.medator.SqlSession;
+import org.Archibald.witch.session.SqlSession;
 
 import java.util.HashMap;
 import java.util.Map;

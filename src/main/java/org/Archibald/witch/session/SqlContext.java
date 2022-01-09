@@ -1,6 +1,6 @@
-package org.Archibald.medator;
+package org.Archibald.witch.session;
 
-import org.Archibald.mapping.SqlCommandType;
+import org.Archibald.witch.mapping.SqlCommandType;
 
 import java.util.Map;
 

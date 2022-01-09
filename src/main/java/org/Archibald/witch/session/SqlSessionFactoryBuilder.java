@@ -4,11 +4,11 @@
  * 利用组装好的配置文件对象（Configuration）
  * 生成SqlSessionFactory对象
  */
-package org.Archibald.medator;
+package org.Archibald.witch.session;
 
-import org.Archibald.binding.MapperRegistry;
-import org.Archibald.mapping.SqlCommandType;
-import org.Archibald.medator.impl.DefaultSqlSessionFactory;
+import org.Archibald.witch.binding.MapperRegistry;
+import org.Archibald.witch.mapping.SqlCommandType;
+import org.Archibald.witch.session.defaults.DefaultSqlSessionFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;

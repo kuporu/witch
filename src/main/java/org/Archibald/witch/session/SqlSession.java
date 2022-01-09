@@ -1,7 +1,7 @@
 /*
  * SqlSession是用户操作直接操作的API接口，其开放有CRUD方法
  */
-package org.Archibald.medator;
+package org.Archibald.witch.session;
 
 import java.util.List;
 

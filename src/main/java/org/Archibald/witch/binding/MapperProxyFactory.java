@@ -1,10 +1,10 @@
 /*
   通过传入接口Class对象，创建其代理对象
  */
-package org.Archibald.binding;
+package org.Archibald.witch.binding;
 
 
-import org.Archibald.medator.SqlSession;
+import org.Archibald.witch.session.SqlSession;
 
 import java.lang.reflect.Proxy;
 

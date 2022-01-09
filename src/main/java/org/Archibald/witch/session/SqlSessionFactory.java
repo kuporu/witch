@@ -1,4 +1,4 @@
-package org.Archibald.medator;
+package org.Archibald.witch.session;
 
 public interface SqlSessionFactory {
     SqlSession openSession();

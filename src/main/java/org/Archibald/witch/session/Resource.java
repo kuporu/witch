@@ -1,4 +1,4 @@
-package org.Archibald.medator;
+package org.Archibald.witch.session;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

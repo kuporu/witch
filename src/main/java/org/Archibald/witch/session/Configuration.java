@@ -1,6 +1,6 @@
-package org.Archibald.medator;
+package org.Archibald.witch.session;
 
-import org.Archibald.binding.MapperRegistry;
+import org.Archibald.witch.binding.MapperRegistry;
 
 import java.sql.Connection;
 import java.util.Map;

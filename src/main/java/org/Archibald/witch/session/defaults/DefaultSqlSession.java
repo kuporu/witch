@@ -1,8 +1,8 @@
-package org.Archibald.medator.impl;
+package org.Archibald.witch.session.defaults;
 
-import org.Archibald.medator.Configuration;
-import org.Archibald.medator.SqlContext;
-import org.Archibald.medator.SqlSession;
+import org.Archibald.witch.session.Configuration;
+import org.Archibald.witch.session.SqlContext;
+import org.Archibald.witch.session.SqlSession;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -70,6 +70,8 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> List<T> selectList(String statement, Object... parameter) {
+        if (parameter == null)
+            return selectList(statement);
         SqlContext sqlContext = statement2SqlContext.get(statement);
         String sql = sqlContext.getSql();
         try {
@@ -173,7 +175,7 @@ public class DefaultSqlSession implements SqlSession {
     private <T> List<T> resultSet2Obj(ResultSet resultSet, Class<?> clazz) {
         List<T> res = new LinkedList<>();
         try {
-            ResultSetMetaData metaData = resultSet.getMetaData();               // 获取sql表中元数据（包好字段名）
+            ResultSetMetaData metaData = resultSet.getMetaData();               // 获取sql表中元数据（包含字段名）
             int columnCount = metaData.getColumnCount();                        // 获取字段名长度
             while (resultSet.next()) {                                          // 查看resultSet中的多行数据
                 T instance = (T) clazz.newInstance();                          // 构建clazz返回对象
@@ -183,6 +185,8 @@ public class DefaultSqlSession implements SqlSession {
                                                                                 // 获取clazz类方法名
                     String objectMethodName = "set" + columnName.substring(0, 1).toUpperCase() + columnName.substring(1);
                                                                                 // 获取返回对象方法名
+                    if (columnValue == null)                                    // 如果对应字段值为空，则跳过赋值阶段
+                        continue;
                     Method method = clazz.getMethod(objectMethodName, columnValue.getClass());
                     method.invoke(instance, columnValue);                       // 执行对象set方法
                 }

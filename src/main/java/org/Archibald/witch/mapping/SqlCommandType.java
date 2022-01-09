@@ -1,4 +1,4 @@
-package org.Archibald.mapping;
+package org.Archibald.witch.mapping;
 
 public enum SqlCommandType {
     UNKNOWN,

@@ -1,7 +1,7 @@
-package org.Archibald.binding;
+package org.Archibald.witch.binding;
 
 
-import org.Archibald.medator.SqlSession;
+import org.Archibald.witch.session.SqlSession;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
