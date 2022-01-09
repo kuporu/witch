@@ -185,6 +185,7 @@ public class DefaultSqlSession implements SqlSession {
                                                                                 // 获取clazz类方法名
                     String objectMethodName = "set" + columnName.substring(0, 1).toUpperCase() + columnName.substring(1);
                                                                                 // 获取返回对象方法名
+<<<<<<< HEAD:src/main/java/org/Archibald/witch/session/defaults/DefaultSqlSession.java
                     if (columnValue == null)                                    // 如果对应字段值为空，则跳过赋值阶段
                         continue;
                     Method method = clazz.getMethod(objectMethodName, columnValue.getClass());
