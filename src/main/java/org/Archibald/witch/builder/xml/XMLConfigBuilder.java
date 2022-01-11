@@ -2,66 +2,65 @@ package org.Archibald.witch.builder.xml;
 
 import org.Archibald.witch.builder.BuilderException;
 import org.Archibald.witch.mapping.SqlCommandType;
+import org.Archibald.witch.parsing.XNode;
+import org.Archibald.witch.parsing.XPathParser;
 import org.Archibald.witch.session.Configuration;
 import org.Archibald.witch.session.Resource;
 import org.Archibald.witch.session.SqlContext;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 
-import java.io.Reader;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class XMLConfigBuilder {
-    private final Reader reader;
-    public XMLConfigBuilder (Reader reader) {
-        this.reader = reader;
+    private final XPathParser xPathParser;
+    public XMLConfigBuilder (InputStream inputStream) {
+        this.xPathParser = new XPathParser(inputStream);
     }
 
+    /**
+     * 通过对XML文件的解析，返回Configuration对象
+     * @return 返回configuration对象
+     */
     public Configuration parse () {
-        try {
-            SAXReader saxReader = new SAXReader();                                                      // 通过dom4j处理xml文件
-            Document document = saxReader.read(reader);
-            Element root = document.getRootElement();
-            Configuration configuration = parseConfiguration(root);
-            return configuration;
-        } catch (DocumentException e) {
-            throw new BuilderException("解析错误", e);
-        }
-    }
-
-    private Configuration parseConfiguration(Element root) {                                        // 从xml文件中生成配置类对象
-        Configuration configuration = new Configuration();
-        configuration.setDataSource(dataSource(root));                                              // 获取数据库配置信息
-        configuration.setConnection(getConnection(configuration));                                  // 获取数据库连接
-        configuration.setMapperSqlContext(getMapperSqlContext(root, configuration));                // 获取sql上下文信息
+        Configuration configuration = parseConfiguration(this.xPathParser.evalNode("/configuration"));
         return configuration;
     }
 
-    private Map<String, SqlContext> getMapperSqlContext (Element root, Configuration configuration) {
+    private Configuration parseConfiguration(XNode context) {                                                           // 从xml文件中生成配置类对象
+        Configuration configuration = new Configuration();
+        configuration.setDataSource(this.dataSource(context.evalNode("environments")));                                 // 获取数据库配置信息
+        configuration.setConnection(this.getConnection(configuration));                                                 // 获取数据库连接
+        configuration.setMapperSqlContext(this.getMapperSqlContext(context.evalNode("mappers"), configuration));        // 获取sql上下文信息
+        return configuration;
+    }
+
+    /**
+     * 除了sql预编译，向 mapperRegistry 中注入动态代理对象
+     * @param context   /configuration结点
+     * @param configuration 配置类对象
+     * @return 返回sqlContext对象
+     */
+    private Map<String, SqlContext> getMapperSqlContext (XNode context, Configuration configuration) {
         Map<String, SqlContext> map = new HashMap<>();
-        Element mappersElement = (Element) root.selectSingleNode("mappers");
+        Iterator<XNode> iterator = context.evalNodes("mapper").iterator();
         String regEx = "(#\\{(.*?)})";
         Pattern pattern = Pattern.compile(regEx);
-        for (Element mapperElement : mappersElement.elements()) {
-            String resourceName = mapperElement.attributeValue("resource");                      // 获取”resource“属性值
-            SAXReader saxReader = new SAXReader();
-            try {
-                Document document = saxReader.read(Resource.getResourceAsReader(resourceName));
-                Element rootElement = document.getRootElement();                                    // 根结点
-                String namespace = rootElement.attributeValue("namespace");
+        try {
+            while (iterator.hasNext()) {
+                XNode next = iterator.next();
+                String source = next.getStringAttribute("resource");
+                XPathParser XMLMapperParser = new XPathParser(Resource.getInputStream(source));
+                XNode mapperRoot = XMLMapperParser.evalNode("/mapper");                   // *mapper.xml
+                String namespace = mapperRoot.getStringAttribute("namespace");
                 configuration.setMapper(Class.forName(namespace));                                  // 将namespace中的Class注入MapperRegistry中统一管理
-                List<Element> elements = rootElement.elements();
-                for (Element element : elements) {
-                    String key = namespace + "." + element.attributeValue("id");
-                    String sql = element.getText();
+                List<XNode> xNodes = mapperRoot.evalNodes("select|insert|update|delete");
+                for (XNode child : xNodes) {
+                    String key = namespace + "." + child.getStringAttribute("id");
+                    String sql = child.getBody();
                     Matcher matcher = pattern.matcher(sql);
                     int idx = 1;                                                                    // 记录占位符位置（从1开始）
                     Map<Integer, String> locationAndPlaceHolderName = new HashMap<>();
@@ -75,18 +74,17 @@ public class XMLConfigBuilder {
 
                     SqlContext sqlContext = new SqlContext();                                       // 构建sqlContext对象
                     sqlContext.setSql(sql);
-                    sqlContext.setResultType(element.attributeValue("resultType"));
+                    sqlContext.setResultType(child.getStringAttribute("resultType"));
                     sqlContext.setLocationAndPlaceholderName(locationAndPlaceHolderName);
-                    sqlContext.setSqlCommandType(SqlCommandType.valueOf(element.getName().toUpperCase()));                  // 获取CRUD类型
+                    sqlContext.setSqlCommandType(SqlCommandType.valueOf(child.getName().toUpperCase()));                // 获取CRUD类型
 
                     map.put(key, sqlContext);
                 }
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+            return map;
+        } catch (Exception e) {
+            throw new BuilderException("", e);
         }
-        return map;
     }
 
     /**
@@ -95,10 +93,10 @@ public class XMLConfigBuilder {
      * @return 数据库连接
      */
     private Connection getConnection (Configuration configuration) {
-        Map<String, String> dataSourceMap = configuration.getDataSource();
+        Properties dataSource = configuration.getDataSource();
         try {
-            Class.forName(dataSourceMap.get("driver"));
-            return DriverManager.getConnection(dataSourceMap.get("url"), dataSourceMap.get("username"), dataSourceMap.get("password"));
+            Class.forName((String) dataSource.get("driver"));
+            return DriverManager.getConnection((String) dataSource.get("url"), (String) dataSource.get("username"), (String) dataSource.get("password"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -107,17 +105,17 @@ public class XMLConfigBuilder {
 
     /**
      * 获取数据库配置信息
-     * @param root xml文件根结点
      * @return 数据库配置信息key:name -> value:value
      */
-    private Map<String, String> dataSource (Element root) {
-        Map<String, String> dataSourceMap = new HashMap<>();
-        Element dataSourceElement = (Element) root.selectSingleNode("//dataSource");                    // "//"表示全文搜索
-        for (Element subElement : dataSourceElement.elements()) {
-            String name = subElement.attributeValue("name");
-            String value = subElement.attributeValue("value");
-            dataSourceMap.put(name, value);
-        }
-        return dataSourceMap;
+    private Properties dataSource (XNode context) {
+        Properties properties = new Properties();
+        XNode xNode = context.evalNode("environment/dataSource");
+        Properties childrenAsProperties = xNode.getChildrenAsProperties();
+        properties.put("driver", childrenAsProperties.getProperty("driver"));
+        properties.put("url", childrenAsProperties.getProperty("url"));
+        properties.put("username", childrenAsProperties.getProperty("username"));
+        properties.put("password", childrenAsProperties.getProperty("password"));
+
+        return properties;
     }
 }
