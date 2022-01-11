@@ -4,10 +4,11 @@ import org.Archibald.witch.binding.MapperRegistry;
 
 import java.sql.Connection;
 import java.util.Map;
+import java.util.Properties;
 
 public class Configuration {
     protected Connection connection;                            // 数据库连接
-    protected Map<String, String> dataSource;                   // 数据库连接所需要的信息（如：数据库名称，用户名，密码）
+    protected Properties dataSource;                            // 数据库连接所需要的信息（如：数据库名称，用户名，密码）
     protected Map<String, SqlContext> mapperSqlContext;         // 根据mapper.xml配置文件属性封装为SqlContext对象，其索引key为namespace + id
     protected final MapperRegistry mapperRegistry;              // mapper方法动态代理管理器
 
@@ -23,11 +24,11 @@ public class Configuration {
         this.connection = connection;
     }
 
-    public Map<String, String> getDataSource() {
+    public Properties getDataSource() {
         return dataSource;
     }
 
-    public void setDataSource(Map<String, String> dataSource) {
+    public void setDataSource(Properties dataSource) {
         this.dataSource = dataSource;
     }
 
