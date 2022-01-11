@@ -8,15 +8,14 @@ package org.Archibald.witch.session;
 
 import org.Archibald.witch.builder.xml.XMLConfigBuilder;
 import org.Archibald.witch.session.defaults.DefaultSqlSessionFactory;
-import org.dom4j.DocumentException;
 
-import java.io.Reader;
+import java.io.InputStream;
 
 public class SqlSessionFactoryBuilder {
 
-    public DefaultSqlSessionFactory build(String resourceName) throws DocumentException {
-        Reader reader = Resource.getResourceAsReader(resourceName);                                 // 通过相对路径名获取文件Reader
-        XMLConfigBuilder xmlConfigBuilder = new XMLConfigBuilder(reader);
+    public DefaultSqlSessionFactory build(String resourceName) {
+        InputStream inputStream = Resource.getInputStream(resourceName);                                 // 通过相对路径名获取文件Reader
+        XMLConfigBuilder xmlConfigBuilder = new XMLConfigBuilder(inputStream);
         Configuration configuration = xmlConfigBuilder.parse();
 
         return new DefaultSqlSessionFactory(configuration);
