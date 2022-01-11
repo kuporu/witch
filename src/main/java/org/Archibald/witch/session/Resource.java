@@ -15,7 +15,7 @@ public class Resource {
         return new InputStreamReader(Objects.requireNonNull(getInputStream(resourceName)));
     }
 
-    private static InputStream getInputStream (String resourceName) {
+    public static InputStream getInputStream (String resourceName) {
         ClassLoader[] classLoaders = getClassLoader();
         for (ClassLoader classLoader: classLoaders) {
             InputStream inputStream = classLoader.getResourceAsStream(resourceName);
