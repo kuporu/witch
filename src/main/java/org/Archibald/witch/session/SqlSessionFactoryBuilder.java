@@ -13,8 +13,7 @@ import java.io.InputStream;
 
 public class SqlSessionFactoryBuilder {
 
-    public DefaultSqlSessionFactory build(String resourceName) {
-        InputStream inputStream = Resource.getInputStream(resourceName);                                 // 通过相对路径名获取文件Reader
+    public DefaultSqlSessionFactory build(InputStream inputStream) {
         XMLConfigBuilder xmlConfigBuilder = new XMLConfigBuilder(inputStream);
         Configuration configuration = xmlConfigBuilder.parse();
 
