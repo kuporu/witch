@@ -4,11 +4,12 @@ import org.Archibald.witch.mapping.SqlCommandType;
 
 import java.util.Map;
 
-public class SqlContext {
+public class MappedStatement {
+    private String id;                                              // 方便向Configuration对象中注入MappedStatement对象
     private String sql;                                             // 预编译后的sql语句
     private String resultType;                                      // sql语句执行返回的包装结果类型
     private Map<Integer, String> locationAndPlaceholderName;        // 预编译后的sql语句占位符位置和名字
-    private SqlCommandType sqlCommandType;                                  // CRUD类型
+    private SqlCommandType sqlCommandType;                          // CRUD类型
 
     public String getSql() {
         return sql;
@@ -40,5 +41,13 @@ public class SqlContext {
 
     public void setSqlCommandType(SqlCommandType sqlCommandType) {
         this.sqlCommandType = sqlCommandType;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
