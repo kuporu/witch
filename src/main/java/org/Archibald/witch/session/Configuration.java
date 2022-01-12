@@ -3,17 +3,19 @@ package org.Archibald.witch.session;
 import org.Archibald.witch.binding.MapperRegistry;
 
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 public class Configuration {
     protected Connection connection;                            // 数据库连接
     protected Properties dataSource;                            // 数据库连接所需要的信息（如：数据库名称，用户名，密码）
-    protected Map<String, SqlContext> mapperSqlContext;         // 根据mapper.xml配置文件属性封装为SqlContext对象，其索引key为namespace + id
+    protected Map<String, MappedStatement> mapperSqlContext;    // 根据mapper.xml配置文件属性封装为SqlContext对象，其索引key为namespace + id
     protected final MapperRegistry mapperRegistry;              // mapper方法动态代理管理器
 
     public Configuration () {
-        this.mapperRegistry = new MapperRegistry();             // ***不添加这句 final MapperRegistry会报错***
+        this.mapperRegistry = new MapperRegistry();
+        this.mapperSqlContext = new HashMap<>();
     }
 
     public Connection getConnection() {
@@ -32,12 +34,16 @@ public class Configuration {
         this.dataSource = dataSource;
     }
 
-    public Map<String, SqlContext> getMapperSqlContext() {
-        return mapperSqlContext;
+    /**
+     * 向mapperSqlContext单例容器中注入ms
+     * @param ms ms对象
+     */
+    public void addDataMapperSqlContext(MappedStatement ms) {
+        this.mapperSqlContext.put(ms.getId(), ms);
     }
 
-    public void setMapperSqlContext(Map<String, SqlContext> mapperSqlContext) {
-        this.mapperSqlContext = mapperSqlContext;
+    public Map<String, MappedStatement> getMapperSqlContext() {
+        return mapperSqlContext;
     }
 
     public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
