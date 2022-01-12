@@ -2,7 +2,7 @@ package org.Archibald.witch.binding;
 
 import org.Archibald.witch.mapping.SqlCommandType;
 import org.Archibald.witch.session.Configuration;
-import org.Archibald.witch.session.SqlContext;
+import org.Archibald.witch.session.MappedStatement;
 import org.Archibald.witch.session.SqlSession;
 
 import java.lang.reflect.Method;
@@ -51,8 +51,8 @@ public class MapperMethod {
 
         public Command (Configuration configuration, Method method) {
             this.name = method.getDeclaringClass().getName() + "." + method.getName();
-            SqlContext sqlContext = configuration.getMapperSqlContext().get(name);
-            this.type = sqlContext.getSqlCommandType();
+            MappedStatement mappedStatement = configuration.getMapperSqlContext().get(name);
+            this.type = mappedStatement.getSqlCommandType();
         }
 
         public String getName() {
