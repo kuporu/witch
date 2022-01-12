@@ -1,7 +1,7 @@
 package org.Archibald.witch.session.defaults;
 
 import org.Archibald.witch.session.Configuration;
-import org.Archibald.witch.session.SqlContext;
+import org.Archibald.witch.session.MappedStatement;
 import org.Archibald.witch.session.SqlSession;
 
 import java.lang.reflect.Field;
@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class DefaultSqlSession implements SqlSession {
     private final Connection connection;                                                                              // sql连接
-    private final Map<String, SqlContext> statement2SqlContext;                                                       // statement转化为sql上下文
+    private final Map<String, MappedStatement> statement2SqlContext;                                                       // statement转化为sql上下文
     private final Configuration configuration;
 
     /**
@@ -40,13 +40,13 @@ public class DefaultSqlSession implements SqlSession {
     public <T> T selectOne(String statement, Object... parameter) {
         if (parameter == null)                                                                                  // 没有携带参数的调用无参方法
             return selectOne(statement);
-        SqlContext sqlContext = statement2SqlContext.get(statement);
-        String sql = sqlContext.getSql();
+        MappedStatement mappedStatement = statement2SqlContext.get(statement);
+        String sql = mappedStatement.getSql();
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            buildParameter(preparedStatement, sqlContext.getLocationAndPlaceholderName(), parameter);           // sql预编译配置参数
+            buildParameter(preparedStatement, mappedStatement.getLocationAndPlaceholderName(), parameter);           // sql预编译配置参数
             ResultSet resultSet = preparedStatement.executeQuery();
-            List<T> objects = resultSet2Obj(resultSet, Class.forName(sqlContext.getResultType()));
+            List<T> objects = resultSet2Obj(resultSet, Class.forName(mappedStatement.getResultType()));
             return objects.get(0);
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -56,12 +56,12 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> List<T> selectList(String statement) {
-        SqlContext sqlContext = statement2SqlContext.get(statement);
-        String sql = sqlContext.getSql();
+        MappedStatement mappedStatement = statement2SqlContext.get(statement);
+        String sql = mappedStatement.getSql();
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
-            return resultSet2Obj(resultSet, Class.forName(sqlContext.getResultType()));
+            return resultSet2Obj(resultSet, Class.forName(mappedStatement.getResultType()));
         } catch (Exception exception) {
             exception.printStackTrace();
         }
@@ -72,13 +72,13 @@ public class DefaultSqlSession implements SqlSession {
     public <T> List<T> selectList(String statement, Object... parameter) {
         if (parameter == null)
             return selectList(statement);
-        SqlContext sqlContext = statement2SqlContext.get(statement);
-        String sql = sqlContext.getSql();
+        MappedStatement mappedStatement = statement2SqlContext.get(statement);
+        String sql = mappedStatement.getSql();
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            buildParameter(preparedStatement, sqlContext.getLocationAndPlaceholderName(), parameter);
+            buildParameter(preparedStatement, mappedStatement.getLocationAndPlaceholderName(), parameter);
             ResultSet resultSet = preparedStatement.executeQuery();
-            return resultSet2Obj(resultSet, Class.forName(sqlContext.getResultType()));
+            return resultSet2Obj(resultSet, Class.forName(mappedStatement.getResultType()));
         } catch (Exception exception) {
             exception.printStackTrace();
         }
